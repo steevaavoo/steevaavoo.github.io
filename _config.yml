@@ -22,6 +22,7 @@ twitter_username: SteveBa89047651
 github_username: steevaavoo
 minimal_mistakes_skin: dark
 search: true
+logo: "/assets/images/foundry-96x96.png"
 
 # Build settings
 markdown: kramdown
@@ -60,7 +61,11 @@ author:
   name   : "Steve Baker"
   avatar : "/assets/images/bio-photo.jpg"
   bio    : "Scripting and automation Padawan. On the path to becoming a coding Jedi and loving every opportunity to learn more."
+  location: "South-West"
   links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:steevaavoo@gmail.com"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       url: "https://steevaavoo.github.io"
