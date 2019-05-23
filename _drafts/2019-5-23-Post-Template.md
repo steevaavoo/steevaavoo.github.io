@@ -10,6 +10,7 @@ tags:
   - tag 3
 toc: true
 toc_sticky: true
+toc_label: "Navigate"
 header:
   # image: /assets/images/image-filename.jpg
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
