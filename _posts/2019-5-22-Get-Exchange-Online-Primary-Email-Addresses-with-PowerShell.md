@@ -25,7 +25,7 @@ I needed to create a list of all Primary SMTP addresses for all users on a clien
 
 `Get-Mailbox` and `Get-Recipient` both return an EmailAddresses property for each object, but they are a serialised combination of all types of address registered against every mailbox returned.
 
-I wanted to simply return the Primary SMTP address (which is denoted by the capitalised “SMTP:” before the address.
+I wanted to simply return the Primary SMTP address (which is denoted by the capitalised “SMTP:” before the address.)
 
 ## How I Did It
 
@@ -40,7 +40,7 @@ I quickly realised that I only wanted to work on a single object, so I re-ran th
 I took a peek at the `EmailAddresses` property and got what I was hoping for (edited for privacy):
 
 ```powershell
-PS:\>mailboxes.EmailAddresses
+PS:\>$mailboxes.EmailAddresses
 
 smtp:email.address@tenant.onmicrosoft.com
 SMTP:email.address@ourdomain.com
