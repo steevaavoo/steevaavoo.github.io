@@ -84,7 +84,7 @@ Loading personal and system profiles took 1353ms.
 
 This was all well and good, but why was the problem not also occuring on my desktop PC?
 
-Step 1 - confirm that the ssh-agent startup type somehow escaped the "Disable-Hammer" of the feature update...
+First, I confirmed that the ssh-agent startup type somehow escaped the "Disable-Hammer" of the feature update...
 
 ```powershell
 > Get-Service ssh-agent | Select-Object StartType
@@ -98,7 +98,7 @@ At line:1 char:1
 
 Well, that came as a surprise.
 
-Step 2 - check the install status of the OpenSSH Client Optional App...
+Better check the install status of the OpenSSH Client Optional App...
 
 ```powershell
 > Get-WindowsCapability -Online -Name *openssh.client*
@@ -112,22 +112,19 @@ DownloadSize : 1316207
 InstallSize  : 5300763
 ```
 
-This shook loose some dust from my memory. As I recall, at some point I got annoyed with having to manage the `ssh-agent` service every time a Windows feature update occurred and I uninstalled it from my desktop PC.
+This shook loose some dust from my memory. As I recall, at some point I got annoyed with having to manage the `ssh-agent` service every time a Windows feature update occurred, so I uninstalled it from my desktop PC.
 
-So I removed the OpenSSH Client optional app from my Surface Laptop:
+So I removed the OpenSSH Client Optional App from my Surface Laptop:
 
 ```powershell
 > $capability = Get-WindowsCapability -Online -Name *openssh.client*
-```
-
-```powershell
 > Remove-WindowsCapability -Name $capability.name -Online
 
 Path          :
 Online        : True
 RestartNeeded : True
 
-Restart-Computer
+>Restart-Computer
 ```
 
 After the Surface came back online, I opened Cmder and waited for a whole bunch of unexpected errors:
