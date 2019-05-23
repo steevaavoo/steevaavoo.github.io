@@ -1,6 +1,6 @@
 ---
 title: Outlook on Exchange On-Premise Credential Re-prompt
-last_modified_at: 2019-05-23T10:59:00-00:00
+last_modified_at: 2019-05-23T15:16:00-00:00
 description: How I fixed a user's password re-prompt issue on Outlook 2016 in an Exchange 2013 environment.
 categories:
   - microsoft exchange
@@ -9,6 +9,7 @@ tags:
   - office 2016
   - outlook 2016
   - windows registry
+  - powershell
 toc: true
 toc_sticky: true
 toc_label: "On this page"
@@ -51,3 +52,12 @@ This key didn't exist, so I added it, then the DWORD with the indicated value.
 Then I closed and re-opened Outlook 2016, and the password re-prompt did not reoccur.
 
 Just to be on the safe side, I then rebooted the PC and opened Outlook again - and the issue remained solved.
+
+## The PowerShell Way
+
+If you'd prefer a quicker way to add the above key to the registry, see below:
+
+```powershell
+New-Item –Path 'HKCU:\Software\Microsoft\Office\16.0\Outlook\' –Name AutoDiscover
+New-ItemProperty -Path 'HKCU:\Software\Microsoft\Office\16.0\Outlook\AutoDiscover' -Name 'ExcludeExplicitO365Endpoint' -Value '0x00000001' -Type DWORD
+```
