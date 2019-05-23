@@ -4,6 +4,7 @@ title: "About Me"
 excerpt: "My name is Steve Baker. I am an IT Consultant based in the South West of England, UK."
 toc: true
 toc_sticky: true
+toc_label: "Navigate"
 ---
 
 ## Me
