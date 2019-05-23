@@ -17,7 +17,7 @@ header:
   # image: /assets/images/image-filename.jpg
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
 excerpt: |
-  Usually a couple of lines from the top of the post...
+  After a smooth feature update from Windows 10 1809 to 1903 on my Surface Laptop and my desktop PC, I started up my development environment...
 ---
 
 ## The Problem
@@ -80,7 +80,7 @@ Loading personal and system profiles took 1353ms.
 >
 ```
 
-## But Wait!
+## But Wait
 
 This was all well and good, but why was the problem not also occuring on my desktop PC?
 
