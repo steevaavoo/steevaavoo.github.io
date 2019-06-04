@@ -68,7 +68,7 @@ $newPropertyParams = @{
   'Path'  = 'HKCU:\Software\Microsoft\Office\16.0\Outlook\AutoDiscover'
   'Name'  = 'ExcludeExplicitO365Endpoint'
   'Value' = '0x00000001'
-  'Type'  = DWORD
+  'Type'  = 'DWORD'
 }
 New-ItemProperty @newPropertyParams
 ```
