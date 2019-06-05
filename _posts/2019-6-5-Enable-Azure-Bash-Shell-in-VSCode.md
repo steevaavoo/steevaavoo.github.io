@@ -15,7 +15,8 @@ header:
   # image: /assets/images/image-filename.jpg
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
 excerpt: |
-  Usually a couple of lines from the top of the post...
+  Whilst running through an Azure DevOps Kubernetes Lab, I decided I'd rather use the terminal in VSCode to run the
+  necessary code snippets
 ---
 
 ## The Challenge
