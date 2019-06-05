@@ -1,6 +1,5 @@
 ---
 title: 
-last_modified_at: 2019-05-23T09:51:00-00:00
 description: 
 categories:
   - main category(ies)
@@ -10,7 +9,7 @@ tags:
   - tag 3
 toc: true
 toc_sticky: true
-toc_label: "Navigate"
+toc_label: "On this page"
 header:
   # image: /assets/images/image-filename.jpg
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
