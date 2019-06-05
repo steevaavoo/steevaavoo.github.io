@@ -16,7 +16,7 @@ header:
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
 excerpt: |
   Whilst running through an Azure DevOps Kubernetes Lab, I decided I'd rather use the terminal in VSCode to run the
-  necessary code snippets
+  necessary code snippets...
 ---
 
 ## The Challenge
