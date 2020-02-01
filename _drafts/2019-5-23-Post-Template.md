@@ -12,7 +12,7 @@ toc: true
 toc_sticky: true
 toc_label: "On this page"
 header:
-  # image: /assets/images/image-filename.jpg
+  # image: ![ALT-TEXT](/assets/images/image-filename.jpg)
   # teaser: /assets/images/logos/PowerShell_5.0_icon_tall.png
 excerpt: |
   Usually a couple of lines from the top of the post...
