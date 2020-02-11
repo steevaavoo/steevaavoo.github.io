@@ -57,7 +57,7 @@ to get ISOs for Server 2019 and Server 2012 R2.
 #### VyOS
 
 To simulate the inter-site routing I decided to use an old favourite - the rolling release version of
-[VYoS](https://downloads.vyos.io/rolling/current/amd64/vyos-1.3-rolling-202001160217-amd64.iso).
+[VyOS](https://downloads.vyos.io/rolling/current/amd64/vyos-1.3-rolling-202001160217-amd64.iso).
 The version I used for this lab was 1.3-rolling-202001160217.
 
 ### Setting up the Lab
