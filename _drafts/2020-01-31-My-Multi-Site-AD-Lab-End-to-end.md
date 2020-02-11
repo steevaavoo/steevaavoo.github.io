@@ -1,6 +1,6 @@
 ---
 title: 
-last_modified_at: 2020-01-31T17:00:00-00:00
+last_modified_at: 2020-02-11T12:59:00-00:00
 description: 
 categories:
   - hyper-v
@@ -565,23 +565,137 @@ always-on VPN connection, there's no need to change anything.
 #### Adding the Read-Only Domain Controllers
 
 At this stage, you've created an Active Directory Site Replication Topology, so now it's time to promote those
-Servers in Edinburgh and Madrid to Read-Only Domain Controllers in the respective Sites. If you use the GUI
+Servers in Edinburgh and Madrid to Read-Only Domain Controllers in the respective Sites. 
+
+NOTE: Make sure to set the Servers' Primary DNS to the IP of the DC01 in London (192.168.2.1) prior to promoting
+them to RODCs.
+
+If you use the GUI
 method to promote the Servers to Domain Controllers, you should see that the Site field is automatically
 populated with the correct location, as below:
 
-![DCPromo Site Pre-Filled]()
+![DCPromo Site Pre-Filled](/assets/images/DCPromoSitePreFilled.png)
 
-Also, if you expand the Servers nodes in Active Directory Sites and Services under the 3 sites, you should see the
-Domain Controllers listed (you may need to refresh):
+NOTE: Leave all the Read-Only Domain Controller options as default for this lab.
 
-![Servers in Sites and Services]()
+NOTE: You'll need to Authorise the DHCP servers on the RODCs after the dcpromo operation is completed.
+
+Afterwards, if you expand the Servers nodes in Active Directory Sites and Services under the 3 sites, you should see the
+Domain Controllers listed (you may need to refresh each site by first right-clicking the site name then clicking
+refresh):
+
+![Servers in Sites and Services](/assets/images/ServersinSitesandServices.png)
 
 ##### Testing Domain Replication
 
+###### Allowing Event Viewer connections through the Firewall - Important
+
+To avoid some errors in the `dcdiag` process later, you'll need to enable a rule in the Firewalls of the RODCs to
+allow incoming RPC connections to Event Viewer.
+
+Open up `firewall.cpl` and go to Advanced Settings, then `Inbound Rules`.
+
+Scroll down to find `Remote Event Log Management (RPC)` and double-click it.
+
+Tick the box to Enable the rule, go to the Scope tab and add the IP address for DC01 in London (192.168.1.2) to the
+Remote IP address list, then click OK.
+
+Repeat this for both RODCs.
+
+###### Manually starting a Replication
+
+Open Active Directory Users and Computers on DC01 in London. Create an Organisational Unit called `Standard Users`.
+
+Open Active Directory Sites and Services, click to expand the Edinburgh site, expand Servers, RODC01, then click on
+`NTDS Settings` and in the right-hand pane, right-click `RODC Connection (SYSVOL)` and click `Replicate Now` and
+click Ok on the following message.
+
+Check in Active Directory Users and Computers on the Edinburgh site RODC01, making sure you are connected to the
+Edinburgh Domain Controller rather than DC01 in London (which it will do by default).
+
+You should see the OU you created.
+
+Repeat this process for Madrid.
+
+###### DCDiag
+
+On DC01 in London, open an Elevated Command Prompt.
+
+Issue the following command:
+
+```shell
+dcdiag /e /f:".\desktop\dcdiag.txt"
+```
+
+You should find a notepad file on DC01's desktop, showing successes in everything but DFSREvent tests and possibly
+some errors relating to Hard Drive Caching.
+
+If you want a "straight answer" on whether replication is working, you can also use the below command:
+
+```shell
+dcdiag /e /test:replications
+```
+
+If you see this:
+
+```
+Directory Server Diagnosis
+
+Performing initial setup:
+   Trying to find home server...
+   Home Server = DC01
+   * Identified AD Forest.
+   Done gathering initial info.
+
+Doing initial required tests
+
+   Testing server: London\DC01
+      Starting test: Connectivity
+         ......................... DC01 passed test Connectivity
+
+   Testing server: Edinburgh\RODC01
+      Starting test: Connectivity
+         ......................... RODC01 passed test Connectivity
+
+   Testing server: Madrid\RODC02
+      Starting test: Connectivity
+         ......................... RODC02 passed test Connectivity
+
+Doing primary tests
+
+   Testing server: London\DC01
+      Starting test: Replications
+         ......................... DC01 passed test Replications
+
+   Testing server: Edinburgh\RODC01
+      Starting test: Replications
+         ......................... RODC01 passed test Replications
+
+   Testing server: Madrid\RODC02
+      Starting test: Replications
+         ......................... RODC02 passed test Replications
 
 
-###### Allowing Event Viewer connections through the Firewall
 
 
+   Running partition tests on : DomainDnsZones
 
- <!-- Remember the Firewall for RPC Event Log access to make sure dcdiag /e passes. -->
+   Running partition tests on : ForestDnsZones
+
+   Running partition tests on : Schema
+
+   Running partition tests on : Configuration
+
+   Running partition tests on : lab
+
+   Running enterprise tests on : lab.bakersfoundry.co.uk
+```
+
+You can be assured that replication is running as expected.
+
+#### The End!
+
+You have created a lab environment, simulating a multi-site organisation with VPN links between a Domain Controller
+and 2 branch office Read-Only Domain Controllers.
+
+If you made it this far, well done! Now take a snapshot and start playing.
