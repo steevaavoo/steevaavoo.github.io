@@ -30,6 +30,21 @@ through to the AD Sites and Services topology configuration.
 As a fan of VMWare VSphere and with little experience of Hyper-V beyond conversations, I figured this was an opportunity
 to familiarise myself with that technology too.
 
+## Assumptions
+
+Since I'd prefer to keep focused on the intended simulation, I'm avoiding going into detail on the below, so
+previous knowledge and experience is assumed:
+
+- Windows Server and networking setup.
+- General Active Directory configuration.
+
+You'll also need a host computer with sufficient resources to handle the VMs we'll create:
+
+- 1x Windows Server 2019 Datacenter
+- 2x Windows Server 2012 R2 Datacenter
+- VyOS router
+- 1x "Laptop" computer (Windows 10 Enterprise Evaluation)
+
 ## How I Did It
 
 ### Gathering Resources
@@ -52,7 +67,7 @@ The version I used for this lab was 1.3-rolling-202001160217.
 
 Thanks to Docker Desktop, I already had the Hyper-V role and management tools installed, but if you want to switch
 it on real quick in Windows 10 Pro (assuming your system meets the relevant pre-requisites), you can use the following
-PowerShell script:
+PowerShell commands:
 
 ```powershell
 Enable-WindowsOptionalFeature -FeatureName Microsoft-Hyper-V -Online -Verbose -All
@@ -137,6 +152,18 @@ the process until you have all the sites set up, then click OK.
 Ultimately, you should end up with a list of appropriately-named switches like this:
 
 ![Virtual Switches](/assets/images/Virtual-Switches.png)
+
+#### Configuring Host Ethernet Adapters - Important
+
+This is an important step - you want to statically configure an IP on each of the networks specified above on your
+host computer to make sure that the DHCP servers created later don't cause some strange routing issues, and also
+to allow you to SSH into VyOS on any of its known static IP addresses.
+
+Go to each of the appropriately-named Ethernet Adapters in Network and Sharing Center on your host PC, and give an
+IP address of `.249` on each of the respective subnets, **making sure to leave Default Gateway and DNS Servers
+empty.** - For example, the 'London' Ethernet Adapter would be configured like this:
+
+![Host Ethernet Adapter Example](../assets/images/HostEthernetSettings.png)
 
 #### VyOS
 
@@ -323,3 +350,238 @@ Now you can copy and paste commands in to VyOS.
 
 ##### General VyOS Settings
 
+Next some general settings such as the router's name, time zone and domain name, and DNS servers for internet
+name resolution.
+
+I named mine rtr01 with a domain name matching the lab AD domain I would be creating.
+
+```bash
+set system domain-name lab.bakersfoundry.co.uk
+set system host-name rtr01
+set system name-server 8.8.8.8
+set system name-server 8.8.4.4
+set system time-zone Europe/London
+commit
+save
+```
+
+At this point, you should get a response if you type (for example) `ping www.microsoft.com` which shows that
+name resolution is working from VyOS.
+
+I used Google's DNS servers, and since I'm based in England, I chose Europe/London as my time zone.
+
+##### Setting up Internet Access Routing with NAT
+
+Now to give VyOS some rules for how to handle internet-bound packets from the various subnets it's connected to.
+
+```bash
+set nat source rule 10 outbound-interface eth0
+set nat source rule 10 source address 192.168.2.0/24
+set nat source rule 10 translation address masquerade
+set nat source rule 11 outbound-interface eth0
+set nat source rule 11 source address 192.168.3.0/24
+set nat source rule 11 translation address masquerade
+set nat source rule 12 outbound-interface eth0
+set nat source rule 12 source address 192.168.4.0/24
+set nat source rule 12 translation address masquerade
+commit
+save
+```
+
+`outbound-interface` is telling VyOS that any packets not routable to any of its 'known' networks from the `source`
+networks designated here, should be routed out via eth0 (our Internet adapter).
+
+`Masquerade` meaning that the router substitutes its own internet-facing IP address for the IP address of the
+device sending the packet, along with a randomly-assigned port number so that reply packets can be sent back to
+the correct originating device by the router.
+
+The `rule x` numbers simply designate in which order VyOS will process them - there is a range from 1-9999, VyOS'
+very helpful documentation suggests keeping 1:1 NAT rules at the top (rule 1 onwards) and general traffic rules
+beneath those, since VyOS will obey the first match found in the order of rules.
+
+##### Setting up DNS Services
+
+Because the sites will start with no DNS servers, I will enable the DNS server service, configure dns forwarders,
+allow DNS requests from those sites, and instruct Vyos to listen on its IP addresses in each site.
+
+```bash
+set service dns forwarding system
+set service dns forwarding name-server 8.8.8.8
+set service dns forwarding name-server 8.8.4.4
+set service dns forwarding allow-from 192.168.2.0/24
+set service dns forwarding allow-from 192.168.3.0/24
+set service dns forwarding allow-from 192.168.4.0/24
+set service dns forwarding listen-address 192.168.2.250
+set service dns forwarding listen-address 192.168.3.250
+set service dns forwarding listen-address 192.168.4.250
+commit
+save
+```
+
+At this point, each site has internet access, and inter-site routing will be working.
+
+#### Setting up Active Directory Sites and Services
+
+##### Differencing Disks
+
+Earlier I touched on the creation of Base Images for the Servers. Assuming they're all done, updated and sysprepped
+, here's how to build VMs based on Differencing Disks, using the read-only VHDX files from the Base Image VMs as
+source, or "parent" disks. Which will make up the VMs (aside from the Windows 10 Enterprise "Laptop") you will set
+up in the various sites.
+
+###### Creating the Differencing Disks
+
+- In Hyper-V Manager, click New, then Hard Disk...
+- Click Next to get past the "Welcome" screen
+- Choose the same disk type as the Base VMs (I used VHDX), click Next
+![Differencing Disk Step 1](/assets/images/DiffDisks1.png)
+
+- Choose Differencing, click Next
+![Differencing Disk Step 2](/assets/images/DiffDisks2.png)
+
+- In name and location of New Disk, name the disk and folder after the intended VM (for example DC01)
+![Differencing Disk Step 3](/assets/images/DiffDisks3.png)
+
+- In the Parent disk selection, find the VHDX file for the appropriate version of Windows you're installing - 2019
+in this case, click Next then Finish
+![Differencing Disk Step 4](/assets/images/DiffDisks4.png)
+
+- Repeat this process for all the intended VMs
+
+###### Creating VMs from the Differencing Disks
+
+To do this, follow the normal procedure for creating a new Virtual Machine, but on the "Connect Virtual Hard Disk"
+step, choose "Use an existing virtual hard disk" and select the appropriate disk for the VM you're building.
+
+NOTE: Make sure the Virtual Machine Generation matches the original Base VM.
+
+![VM from Existing Disk](/assets/images/VMFromDiffDisk.png)
+
+Repeat the process to fulfill the requirements for the lab...
+
+##### Pre-requisites
+
+- Server 2019 Datacenter Domain Controller in London site.
+  - Virtual Switch: London
+  - Name: DC01
+  - Domain Controller
+  - Forest and Domain Functional Level: Server 2012 R2
+  - FQDN: lab.domain.com
+  - IP: 192.168.2.1
+  - Additional Services: DHCP
+
+- Server 2012 Datacenter server in Edinburgh site.
+  - Virtual Switch: Edinburgh
+  - Name: RODC01
+  - IP: 192.168.3.1
+  - Additional Services: DHCP
+
+- Server 2012 Datacenter server in Madrid site.
+  - Virtual Switch: Madrid
+  - Name: RODC02
+  - IP: 192.168.4.1
+  - Additional Services: DHCP
+
+The Edinburgh and Madrid servers should have no AD services installed at this point.
+
+##### Site Configuration
+
+On the London Site Windows 2019 Datacenter Server, open Active Directory Sites & Services.
+
+![AD Sites and Services Shortcut](../assets/images/SitesandServices.png)
+
+##### Naming the London Site
+
+Expand the Sites node in the left pane, then right-click `Default-First-Site-Name`, click Rename and change it to
+London
+
+![Rename Default Site](/assets/images/RenameDefaultSite.png)
+
+##### Creating a Subnet
+
+Right-click the `Subnets` node, then click `New Subnet...`
+
+![Create New Subnet](/assets/images/CreateNewSubnet.png)
+
+Enter the Subnet Prefix and length for the London site (192.168.2.0/24), then click London from the list(!) of
+available sites, then click Ok.
+
+![Create London Subnet](../assets/images/LondonSubnet.png)
+
+##### Creating Additional Sites
+
+Right-click the `Sites` node in the left-hand pane, then click `New Site...`
+
+![New Site](../assets/images/NewSite.png)
+
+Name the site Edinburgh, and select the `DEFAULTIPSITELINK` and click Ok. You'll change the Site Link later.
+
+![New Site Details](../assets/images/NewSiteDetails.png)
+
+You will see a message with next steps from Active Directory Domain Services, you can just click OK to this.
+
+![ADDS Message](../assets/images/ADDSMessage.png)
+
+Repeat the above process for Madrid.
+
+Next use the 'Creating a Subnet' instructions above to create corresponding Subnets for Edinburgh (192.168.3.0/24) 
+and Madrid (192.168.4.0/24).
+
+Your Sites and Services window should look like the below. Subnets matching Sites as appropriate.
+
+![Subnets and Sites](../assets/images/SubnetsandSites.png)
+
+Active Directory has now been told that any device which joins the Domain in a given subnet is in the corresponding
+physical location, so it will find the geographically closest Domain Controller to handle security operations such
+as checking credentials on login.
+
+The Site Transports you create next will tell Active Directory how it can physically replicate data to the RODCs
+created in the next section.
+
+##### Inter-Site Transports
+
+Expand the `Inter-Site Transports` node, then click the `IP` node.
+
+Right-click the `DEFAULTIPSITELINK` entry, click Delete, then click Yes.
+
+Right-click in the empty space, then click `New Site Link...`
+
+Enter the name `LondonEdinburghVPN`, then click to highlight London and Edinburgh, then click `Add`
+
+![London Edinburgh Link](/assets/images/LondonEdinburghLink.png)
+
+Repeat the above to create a link called `LondonMadridVPN` containing London and Madrid.
+
+Double-click each of the newly-created Site Links, change the Replication Interval to 15 minutes and click Ok.
+
+Afterwards, you should see the below in the Inter-Site Transports list.
+
+![Inter Site Transports](/assets/images/SiteLinks.png)
+
+The `Cost` metric is not relevant to you in this Lab scenario - it's intended for use as a weighting tool to allow
+Active Directory to favour cheaper links over more expensive ones for Replication. Since this Lab is simulating an
+always-on VPN connection, there's no need to change anything.
+
+#### Adding the Read-Only Domain Controllers
+
+At this stage, you've created an Active Directory Site Replication Topology, so now it's time to promote those
+Servers in Edinburgh and Madrid to Read-Only Domain Controllers in the respective Sites. If you use the GUI
+method to promote the Servers to Domain Controllers, you should see that the Site field is automatically
+populated with the correct location, as below:
+
+![DCPromo Site Pre-Filled]()
+
+Also, if you expand the Servers nodes in Active Directory Sites and Services under the 3 sites, you should see the
+Domain Controllers listed (you may need to refresh):
+
+![Servers in Sites and Services]()
+
+##### Testing Domain Replication
+
+
+
+###### Allowing Event Viewer connections through the Firewall
+
+
+
+ <!-- Remember the Firewall for RPC Event Log access to make sure dcdiag /e passes. -->
