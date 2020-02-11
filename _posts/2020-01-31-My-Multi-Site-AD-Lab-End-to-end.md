@@ -163,7 +163,7 @@ Go to each of the appropriately-named Ethernet Adapters in Network and Sharing C
 IP address of `.249` on each of the respective subnets, **making sure to leave Default Gateway and DNS Servers
 empty.** - For example, the 'London' Ethernet Adapter would be configured like this:
 
-![Host Ethernet Adapter Example](../assets/images/HostEthernetSettings.png)
+![Host Ethernet Adapter Example](/assets/images/HostEthernetSettings.png)
 
 #### VyOS
 
