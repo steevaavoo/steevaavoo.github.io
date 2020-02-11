@@ -43,7 +43,6 @@ You'll also need a host computer with sufficient resources to handle the VMs we'
 - 1x Windows Server 2019 Datacenter
 - 2x Windows Server 2012 R2 Datacenter
 - VyOS router
-- 1x "Laptop" computer (Windows 10 Enterprise Evaluation)
 
 ## How I Did It
 
