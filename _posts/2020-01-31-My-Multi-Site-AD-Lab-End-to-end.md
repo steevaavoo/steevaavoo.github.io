@@ -622,7 +622,7 @@ On DC01 in London, open an Elevated Command Prompt.
 
 Issue the following command:
 
-```shell
+```cmd
 dcdiag /e /f:".\desktop\dcdiag.txt"
 ```
 
@@ -631,13 +631,13 @@ some errors relating to Hard Drive Caching.
 
 If you want a "straight answer" on whether replication is working, you can also use the below command:
 
-```shell
+```cmd
 dcdiag /e /test:replications
 ```
 
 If you see this:
 
-```
+```txt
 Directory Server Diagnosis
 
 Performing initial setup:
