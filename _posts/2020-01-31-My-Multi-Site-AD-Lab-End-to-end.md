@@ -596,7 +596,7 @@ Open up `firewall.cpl` and go to Advanced Settings, then `Inbound Rules`.
 
 Scroll down to find `Remote Event Log Management (RPC)` and double-click it.
 
-Tick the box to Enable the rule, go to the Scope tab and add the IP address for DC01 in London (192.168.1.2) to the
+Tick the box to Enable the rule, go to the Scope tab and add the IP address for DC01 in London (192.168.2.1) to the
 Remote IP address list, then click OK.
 
 Repeat this for both RODCs.
